@@ -1,7 +1,8 @@
-import React from "react";
-import { Stack } from "expo-router";
 import { AntDesign } from "@expo/vector-icons";
+import { Stack } from "expo-router";
+import React from "react";
 import { TouchableOpacity } from "react-native";
+
 import { useAuth } from "@/providers/AuthProvider";
 
 const AuthLayout = () => {

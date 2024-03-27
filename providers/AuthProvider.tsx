@@ -1,4 +1,5 @@
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 import React, {
   ReactNode,
   createContext,
@@ -7,7 +8,6 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import * as SecureStore from "expo-secure-store";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 const JWT_key = "JWT_KEY";
@@ -42,9 +42,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (result.data.token) {
             console.log("We have token!"); // FIXME:
             setToken(result.data.token);
-            axios.defaults.headers.common[
-              "Authorization"
-            ] = `Bearer ${result.data.token}`;
+            axios.defaults.headers.common["Authorization"] =
+              `Bearer ${result.data.token}`;
             await SecureStore.setItemAsync(JWT_key, result.data.token);
           }
         } catch (error: any) {
@@ -66,9 +65,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
             password,
           });
           if (result.data.token) setToken(result.data.token);
-          axios.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${result.data.token}`;
+          axios.defaults.headers.common["Authorization"] =
+            `Bearer ${result.data.token}`;
           await SecureStore.setItemAsync(JWT_key, result.data.token);
           return result;
         } catch (error: any) {
@@ -87,9 +85,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedToken = await SecureStore.getItemAsync(JWT_key);
       if (storedToken) {
         setToken(storedToken);
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${storedToken}`;
+        axios.defaults.headers.common["Authorization"] =
+          `Bearer ${storedToken}`;
       }
       setInitialized(true);
     };

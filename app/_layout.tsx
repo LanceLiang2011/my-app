@@ -1,5 +1,7 @@
-import { Slot, Stack, useRouter, useSegments } from "expo-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Slot, useRouter, useSegments } from "expo-router";
 import React, { useEffect } from "react";
+
 import AuthProvider, { useAuth } from "@/providers/AuthProvider";
 
 const RouteProtectionLayout = () => {
@@ -26,10 +28,15 @@ const RouteProtectionLayout = () => {
   return <Slot />;
 };
 
+// * create queryclient outside the component.
+const queryClient = new QueryClient();
+
 const RootLayout = () => {
   return (
     <AuthProvider>
-      <RouteProtectionLayout />
+      <QueryClientProvider client={queryClient}>
+        <RouteProtectionLayout />
+      </QueryClientProvider>
     </AuthProvider>
   );
 };
