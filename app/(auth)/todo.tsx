@@ -1,5 +1,6 @@
 import { Feather, FontAwesome6 } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -11,10 +12,18 @@ import {
   FlatList,
   ListRenderItem,
   TouchableOpacity,
+  Image,
 } from "react-native";
 
 import type { Todo } from "@/api/todos";
-import { createTodo, deleteTodo, getTodos, updateTodo } from "@/api/todos";
+import {
+  createTodo,
+  deleteTodo,
+  getTodos,
+  updateTodo,
+  uploadImage,
+} from "@/api/todos";
+import { useAuth } from "@/providers/AuthProvider";
 
 const TodoScreen = () => {
   const [todo, setTodo] = useState<string>("");
@@ -23,6 +32,7 @@ const TodoScreen = () => {
     queryKey: ["todos"],
     queryFn: getTodos,
   });
+  const { token } = useAuth();
   const addTodosMutation = useMutation({
     mutationFn: createTodo,
     onSuccess: () => {
@@ -53,6 +63,17 @@ const TodoScreen = () => {
     },
   });
 
+  const uploadImageMutation = useMutation({
+    mutationFn: uploadImage,
+    onSuccess: (updatedData: Todo) => {
+      queryClient.setQueryData(["todos"], (oldData: Todo[]) =>
+        oldData.map((todo) =>
+          todo._id === updatedData._id ? updatedData : todo
+        )
+      );
+    },
+  });
+
   const addTodo = () => {
     addTodosMutation.mutate(todo);
   };
@@ -63,10 +84,31 @@ const TodoScreen = () => {
   const trashTodo = (id: string) => {
     deleteTodoMutation.mutate(id);
   };
-  const captureImage = () => {};
+
+  const captureImage = async (id: string) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      uploadImageMutation.mutate({ id, uri, token: token || "" });
+    }
+  };
 
   const renderItem: ListRenderItem<Todo> = ({ item }) => (
     <View style={styles.taskCard}>
+      {item.img && (
+        <Image
+          source={{
+            uri: item.img,
+            headers: { Authorization: `Bearer ${token}` },
+          }}
+          style={{ height: 80, width: 80 }}
+        />
+      )}
       <View style={styles.todoContainer}>
         <TouchableOpacity onPress={() => toggleDone(item)} style={styles.task}>
           {item.status === 1 ? (
@@ -79,7 +121,7 @@ const TodoScreen = () => {
         <TouchableOpacity onPress={() => trashTodo(item._id)}>
           <Feather name="trash-2" size={24} color="red" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={captureImage}>
+        <TouchableOpacity onPress={() => captureImage(item._id)}>
           <Feather name="camera" size={24} color="blue" />
         </TouchableOpacity>
       </View>
